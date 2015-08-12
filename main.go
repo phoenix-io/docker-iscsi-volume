@@ -2,18 +2,24 @@ package main
 
 import (
 	"fmt"
-	_ "log"
+	"log"
 	"os"
+	"path/filepath"
 
-	_"github.com/calavera/dkvolume"
+	"github.com/calavera/dkvolume"
 	"github.com/codegangsta/cli"
+	"github.com/phoenix-io/docker-iscsi-volume/iscsi"
 )
 
 const (
-	iscsiConf      = "/etc/iscsi/iscsid.conf"
+	iscsiConf     = "/etc/iscsi/iscsid.conf"
+	iscsiVolumeID = "_iscsiVolume"
 	socketAddress = "/usr/share/docker/plugins/iscsi-vol.sock"
 )
 
+var (
+	defaultPath = filepath.Join(dkvolume.DefaultDockerRootDirectory, iscsiVolumeID)
+)
 
 func main() {
 
@@ -28,39 +34,70 @@ func main() {
 			Action: listVolumes,
 		},
 		{
-			Name:   "discover",
-			Usage:  "Perform volume discovery",
+			Name:  "discover",
+			Usage: "Perform volume discovery",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "target",
+					Usage: "target IP / hostname for LUN discovery",
+				},
+			},
 			Action: discoverVolumes,
 		},
 		{
-			Name:   "add",
-			Usage:  "Adds the volume",
-			Action: addVolume,
+			Name:   "login",
+			Usage:  "login the target",
+			Action: loginTarget,
 		},
 		{
-			Name:   "del",
-			Usage:  "Deletes the volume",
-			Action: delVolume,
+			Name:   "logout",
+			Usage:  "logout the target",
+			Action: logoutTarget,
 		},
 	}
+
+	d := newISCSIVolumeDriver()
+	h := dkvolume.NewHandler(d)
+	fmt.Println("Listening on %s\n", sockerAddress)
+	fmt.Println(h.ServeUnix(defaultPath, sockerAddress))
+
 	plugin.Run(os.Args)
-	// Create Plugin Driver
-	// SetNew Handler.
-	// Listen at socket.
 }
 
 func listVolumes(c *cli.Context) {
-	fmt.Println("NOT IMPLEMENTED")
+	plugin := iscsi.NewISCSIPlugin()
+	err := plugin.ListVolumes()
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
 func discoverVolumes(c *cli.Context) {
-	fmt.Println("NOT IMPLEMENTED")
+	target := c.String("target")
+	if len(target) == 0 {
+		cli.ShowCommandHelp(c, "discover")
+		return
+	}
+
+	plugin := iscsi.NewISCSIPlugin()
+	err := plugin.DiscoverLUNs(target)
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
-func addVolume(c *cli.Context) {
-	fmt.Println("NOT IMPLEMENTED")
+func loginTarget(c *cli.Context) {
+	plugin := iscsi.NewISCSIPlugin()
+	err := plugin.LoginTarget("", "")
+	if err != nil {
+		log.Panic(err)
+	}
 }
 
-func delVolume(c *cli.Context) {
-	fmt.Println("NOT IMPLEMENTED")
+func logoutTarget(c *cli.Context) {
+	plugin := iscsi.NewISCSIPlugin()
+	err := plugin.LogoutTarget("", "")
+	if err != nil {
+		log.Panic(err)
+	}
 }
