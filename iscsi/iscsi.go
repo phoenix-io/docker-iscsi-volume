@@ -43,10 +43,13 @@ func (plugin *ISCSIPlugin) CheckIscsiSupport() bool {
 	return true
 }
 
+// iscsiadm -m discovery -t sendtargets -p <IP | Target>
+
 func (plugin *ISCSIPlugin) DiscoverLUNs(host string) error {
 	return nil
 }
 
+// iscsiadm -m node -o show  (Shows discovered list)
 func (plugin *ISCSIPlugin) ListVolumes() error {
 	return nil
 }
@@ -60,3 +63,7 @@ func (plugin *ISCSIPlugin) DeleteVolumes(volume string) error {
 	return nil
 
 }
+
+//Login: iscsiadm -m node --login (login on all discovered nodes.)
+
+// iscsiadm -m session -o show  (List current active session)
