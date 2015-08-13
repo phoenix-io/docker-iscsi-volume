@@ -8,8 +8,13 @@ import (
 	"strings"
 )
 
+type iscsiLUNInfo struct {
+	host string
+	fqdn string
+}
+
 type ISCSIPlugin struct {
-	hosts string
+	lunInfo []iscsiLUNInfo
 }
 
 const CmdNotFound = "Command Not Found"
@@ -31,9 +36,9 @@ func ExecuteCommand(command string, args ...string) (string, string) {
 }
 
 func NewISCSIPlugin() ISCSIPlugin {
-	return ISCSIPlugin{
-		"test1",
-	}
+	var lun []iscsiLUNInfo
+	iscsiPlugin := ISCSIPlugin{lun}
+	return iscsiPlugin
 }
 
 func (plugin *ISCSIPlugin) CheckIscsiSupport() bool {
@@ -60,8 +65,25 @@ func (plugin *ISCSIPlugin) DiscoverLUNs(host string) error {
 		"sendtargets",
 		"-p",
 		host)
+	//	log.Println(out)
+	//	out = `172.23.10.240:3260,1 iqn.2001-05.com.equallogic:0-8a0906-83bcb3401-16e0002fd0a46f3d-rhel5-test
+	//		172.23.10.241:3260,1 iqn.2005-05.com.equallogic:0-8a0906-83bcb3401-16e0002fd0a46f3d-rhel5-test`
+	if len(out) > 0 {
+		lineArray := strings.Split(out, "\n")
+		for _, line := range lineArray {
+			token := strings.Split(line, ",")
+			var lun iscsiLUNInfo
+			lun.host = strings.TrimSpace(token[0])
+			// Split again to get only fqdn name.
+			fqdn := strings.Split(token[1], " ")
+			lun.fqdn = strings.TrimSpace(fqdn[1])
+			fmt.Println(lun.host)
+			fmt.Println(lun.fqdn)
+			plugin.lunInfo = append(plugin.lunInfo, lun)
+		}
+		//fmt.Println(plugin)
+	}
 
-	log.Println(out)
 	log.Println(errMsg)
 
 	return nil
