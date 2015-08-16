@@ -65,12 +65,13 @@ func (plugin *ISCSIPlugin) DiscoverLUNs(host string) error {
 		"sendtargets",
 		"-p",
 		host)
-	//	log.Println(out)
-	//	out = `172.23.10.240:3260,1 iqn.2001-05.com.equallogic:0-8a0906-83bcb3401-16e0002fd0a46f3d-rhel5-test
-	//		172.23.10.241:3260,1 iqn.2005-05.com.equallogic:0-8a0906-83bcb3401-16e0002fd0a46f3d-rhel5-test`
+
 	if len(out) > 0 {
 		lineArray := strings.Split(out, "\n")
 		for _, line := range lineArray {
+			if len(line) == 0 {
+				break
+			}
 			token := strings.Split(line, ",")
 			var lun iscsiLUNInfo
 			lun.host = strings.TrimSpace(token[0])
@@ -81,10 +82,11 @@ func (plugin *ISCSIPlugin) DiscoverLUNs(host string) error {
 			fmt.Println(lun.fqdn)
 			plugin.lunInfo = append(plugin.lunInfo, lun)
 		}
-		//fmt.Println(plugin)
 	}
-
-	log.Println(errMsg)
+	if len(errMsg) > 0 {
+		err := fmt.Errorf("Unable to Discover: %s", errMsg)
+		return err
+	}
 
 	return nil
 }
@@ -99,7 +101,10 @@ func (plugin *ISCSIPlugin) ListVolumes() error {
 		"show")
 
 	log.Println(out)
-	log.Println(errMsg)
+	if len(errMsg) > 0 {
+		err := fmt.Errorf("Unable to fetch List: %s", errMsg)
+		return err
+	}
 	return nil
 }
 
@@ -131,7 +136,10 @@ func (plugin *ISCSIPlugin) LoginTarget(target string, group string) error {
 	}
 
 	log.Println(out)
-	log.Println(errMsg)
+	if len(errMsg) > 0 {
+		err := fmt.Errorf("Unable to Login: %s", errMsg)
+		return err
+	}
 	return nil
 
 }
@@ -158,7 +166,11 @@ func (plugin *ISCSIPlugin) LogoutTarget(target string, group string) error {
 	}
 
 	log.Println(out)
-	log.Println(errMsg)
+	if len(errMsg) > 0 {
+		err := fmt.Errorf("Unable to Logout: %s", errMsg)
+		return err
+	}
+
 	return nil
 
 }

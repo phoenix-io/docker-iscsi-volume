@@ -18,7 +18,7 @@ func TestCheckIscsiSupport(t *testing.T) {
 
 func TestDiscoverLUNsPass(t *testing.T) {
 	plugin := NewISCSIPlugin()
-	err := plugin.DiscoverLUNs("10.0.2.15")
+	err := plugin.DiscoverLUNs("192.168.2.3")
 	if err != nil {
 		t.Error(err)
 	}

@@ -55,13 +55,13 @@ func main() {
 			Action: logoutTarget,
 		},
 	}
-
-	d := newISCSIVolumeDriver()
-	h := dkvolume.NewHandler(d)
-	fmt.Println("Listening on %s\n", sockerAddress)
-	fmt.Println(h.ServeUnix(defaultPath, sockerAddress))
-
 	plugin.Run(os.Args)
+
+	d := newISCSIVolumeDriver("iscsi")
+	h := dkvolume.NewHandler(d)
+	fmt.Println("Listening on ", socketAddress)
+	fmt.Println(h.ServeUnix("root", socketAddress))
+
 }
 
 func listVolumes(c *cli.Context) {
